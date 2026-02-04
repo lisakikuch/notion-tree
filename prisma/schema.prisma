@@ -1,0 +1,59 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Interest {
+  id       String         @id @default(uuid())
+  userId   String
+  title     String
+  reflection String?    @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  lastAccessedAt DateTime @default(now())
+
+  tags   InterestTag[]
+  resources Resource[]
+
+  @@index([userId, lastAccessedAt, id], map: "interest_user_lastAccessedAt_id_idx")
+}
+
+model Tag {
+  id    String     @id @default(uuid())
+  userId String
+  name  String
+  nameNormalized String
+
+  interests InterestTag[]
+
+  @@unique([userId, nameNormalized], map: "tag_user_nameNormalized_uq")
+  @@index([userId], map: "tag_user_idx")
+}
+
+model InterestTag {
+  interestId String
+  tagId      String
+
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([interestId, tagId], map: "interestTag_interest_tag_uq")
+  @@index([tagId, interestId], map: "interestTag_tag_interest_idx")
+}
+
+model Resource {
+  id        String     @id @default(uuid())
+  interestId String
+  title     String
+  url       String?
+
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  
+  @@index([interestId], map: "resource_interest_idx")
+}
+
