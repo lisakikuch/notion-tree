@@ -1,14 +1,8 @@
-// src/lib/auth/authMiddleware.ts
-
-import type { Request, Response, NextFunction } from 'express';
+import type { RequestHandler } from 'express';
 import { verifyToken } from '@/lib/auth/cognitoJwt.js';
 import { UnauthorizedError } from '@/lib/http/errors.js';
 
-const authMiddleware = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+const auth: RequestHandler = async (req, res, next) => {
     const DEV_USER_ID = process.env.DEV_USER_ID
 
     if (process.env.NODE_ENV === 'development' && DEV_USER_ID) {
@@ -34,4 +28,4 @@ const authMiddleware = async (
         return next(err);
     }
 }
-export default authMiddleware;
+export default auth;
