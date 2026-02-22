@@ -18,7 +18,6 @@ model Interest {
   lastAccessedAt DateTime @default(now())
 
   tags   InterestTag[]
-  resources Resource[]
 
   @@index([userId, lastAccessedAt, id], map: "interest_user_lastAccessedAt_id_idx")
 }
@@ -44,16 +43,5 @@ model InterestTag {
 
   @@unique([interestId, tagId], map: "interestTag_interest_tag_uq")
   @@index([tagId, interestId], map: "interestTag_tag_interest_idx")
-}
-
-model Resource {
-  id        String     @id @default(uuid())
-  interestId String
-  title     String
-  url       String?
-
-  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
-  
-  @@index([interestId], map: "resource_interest_idx")
 }
 
