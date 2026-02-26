@@ -11,35 +11,15 @@ const nonEmptyTrimmedString = z
 const optionalTrimmedText = z
     .string()
     .trim()
-    .transform((val) => (val === "" ? undefined : val))
+    .transform((val) => (val === "" ? null : val))
     .optional();
 
 const sortSchema = z.enum(['asc', 'desc']).default('desc');
 
-// Cursor Handling
-const cursorPayloadSchema = z.object({
-    lastAccessedAt: z.iso.datetime(),
-    id: uuidSchema,
-});
-
-// schema that validates the string is a valid cursor
-const cursorStringSchema = z.string().superRefine((val, ctx) => {
-    try {
-        const json = Buffer.from(val, 'base64').toString('utf-8');
-        const parsed = JSON.parse(json);
-        const res = cursorPayloadSchema.safeParse(parsed);
-        if (!res.success) {
-            ctx.addIssue({ code: 'custom', message: 'Invalid cursor format' });
-        }
-    } catch {
-        ctx.addIssue({ code: 'custom', message: 'Invalid cursor format' });
-    }
-});
-
 // GET /interests
 export const listInterestsQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(50).default(20),
-    cursor: cursorStringSchema.optional(),
+    cursor: z.string().min(1).optional(),
     sort: sortSchema,
 });
 
@@ -54,7 +34,7 @@ export const createInterestBodySchema = z
 // PATCH /interests/:id
 export const patchInterestBodySchema = z
     .object({
-        title: nonEmptyTrimmedString,
+        title: nonEmptyTrimmedString.optional(),
         reflection: optionalTrimmedText,
         tagIds: z.array(uuidSchema).optional(),
     })
