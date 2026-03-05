@@ -51,3 +51,8 @@ export const interestIdParamsSchema = z
     .object({
         id: uuidSchema,
     })
+
+export type ListInterestsQuery = z.infer<typeof listInterestsQuerySchema>;
+export type CreateInterestBody = z.infer<typeof createInterestBodySchema>;
+export type PatchInterestBody = z.infer<typeof patchInterestBodySchema>;
+export type InterestIdParams = z.infer<typeof interestIdParamsSchema>;

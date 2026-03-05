@@ -13,6 +13,9 @@ const cursorPayloadWireSchema = z.object({
 
 export function decodeCursor(cursorString: string): CursorPayload {
     try {
+        if (!cursorString) {
+            throw new BadRequestError("Invalid cursor format");
+        }
         // 1) base64 -> json string
         const json = Buffer.from(cursorString, 'base64').toString('utf-8');
         // 2) json -> object
@@ -37,7 +40,7 @@ export function decodeCursor(cursorString: string): CursorPayload {
 
 export function encodeCursor(payload: CursorPayload): string {
     const wire = {
-        lastAccessdAt: payload.lastAccessedAt.toISOString(),
+        lastAccessedAt: payload.lastAccessedAt.toISOString(),
         id: payload.id,
     };
 
