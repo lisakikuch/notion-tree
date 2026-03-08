@@ -27,6 +27,18 @@ export class ForbiddenError extends HttpError {
     }
 }
 
+export class NotFoundError extends HttpError {
+    constructor(message: string = 'Not Found') {
+        super(404, message);
+    }
+}
+
+export class ConflictError extends HttpError {
+    constructor(message: string = 'Conflict') {
+        super(409, message);
+    }
+}
+
 export class ValidationError extends HttpError {
     constructor(message: string = 'Unprocessable Content', details?: unknown) {
         super(422, message, details);

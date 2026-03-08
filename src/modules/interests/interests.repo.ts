@@ -3,14 +3,15 @@ import type { Prisma } from '@prisma/client';
 import type { CursorPayload } from '@/lib/pagination/cursor.js';
 
 type Sort = 'asc' | 'desc';
+type Tx = Prisma.TransactionClient;
 
-export async function findManyPaginated(args: {
+export async function findManyPaginated(data: {
     userId: string,
     limit: number,
     sort: Sort,
-    cursor?: CursorPayload,
+    cursor?: CursorPayload | undefined,
 }) {
-    const { userId, limit, sort, cursor } = args;
+    const { userId, limit, sort, cursor } = data;
 
     const orderBy: Prisma.InterestOrderByWithRelationInput[] = [
         { lastAccessedAt: sort },
@@ -82,7 +83,7 @@ export async function findById(
     return prisma.interest.findFirst({
         where: {
             id: interestId,
-            userId: userId,
+            userId,
         },
         select: {
             id: true,
@@ -106,36 +107,67 @@ export async function findById(
 }
 
 export async function create(data: {
+    tx: Tx;
     userId: string;
     title: string;
     reflection?: string | null;
 }) {
-    return prisma.interest.create({
+    const { tx, userId, title, reflection } = data;
+    const db = tx ?? prisma;
+
+    return db.interest.create({
         data: {
-            userId: data.userId,
-            title: data.title,
-            reflection: data.reflection ?? null,
+            userId,
+            title,
+            reflection: reflection ?? null,
         },
     });
 }
 
-export async function update(
+export async function update(data: {
+    tx?: Tx,
     userId: string,
     interestId: string,
-    data: {
-        title?: string,
-        reflection?: string | null,
-    }
-) {
-    return prisma.interest.updateMany({
+    title?: string,
+    reflection?: string | null,
+}) {
+    const { tx, userId, interestId, title, reflection } = data;
+    const db = tx ?? prisma;
+
+    return db.interest.updateMany({
         where: {
             id: interestId,
-            userId: userId,
+            userId,
         },
         data: {
-            ...(data.title !== undefined ? { title: data.title } : {}),
-            ...(data.reflection !== undefined ? { reflection: data.reflection } : {}),
+            ...(title !== undefined ? { title } : {}),
+            ...(reflection !== undefined ? { reflection } : {}),
         },
+    });
+}
+
+export async function replaceTags(data: {
+    tx: Tx;
+    interestId: string;
+    tagIds: string[];
+}) {
+    const { tx, interestId, tagIds } = data;
+
+    await tx.interestTag.deleteMany({
+        where: {
+            interestId,
+        },
+    });
+
+    if (tagIds.length === 0) return;
+
+
+    await tx.interestTag.createMany({
+        data: tagIds.map((tagId) => ({
+            interestId,
+            tagId,
+        })),
+        skipDuplicates: true,
     });
 }
 
@@ -146,7 +178,7 @@ export async function remove(
     return prisma.interest.deleteMany({
         where: {
             id: interestId,
-            userId: userId,
+            userId,
         },
     });
 }
