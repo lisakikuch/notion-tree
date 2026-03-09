@@ -52,3 +52,12 @@ export async function create(data: { userId: string; name: string }) {
     return tag;
 }
 
+export async function deleteById(userId: string, tagId: string) {
+    return await prisma.tag.deleteMany({
+        where: {
+            id: tagId, 
+            userId,
+        },
+    });
+}
+

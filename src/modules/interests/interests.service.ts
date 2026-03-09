@@ -103,7 +103,7 @@ export async function deleteInterest(
     userId: string, 
     interestId: string
 ) {
-    const deletedInterest = await interestsRepo.remove(userId, interestId);
+    const deletedInterest = await interestsRepo.deleteById(userId, interestId);
     
     if (deletedInterest.count === 0) {
         throw new NotFoundError('Interest not found');

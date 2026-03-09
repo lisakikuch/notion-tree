@@ -41,7 +41,7 @@ model InterestTag {
   interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
   tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([interestId, tagId], map: "interestTag_interest_tag_uq")
+  @@id([interestId, tagId])
   @@index([tagId, interestId], map: "interestTag_tag_interest_idx")
 }
 

@@ -79,3 +79,13 @@ export async function assertTagsExistAndBelongToUser(
     }
     return uniqueTagIds;
 };
+
+export async function deleteTag(
+    userId: string,
+    tagId: string
+) {
+    const deletedTag = await tagsRepo.deleteById(userId, tagId);
+    if (deletedTag.count === 0) {
+        throw new NotFoundError('Tag not found');
+    }
+}

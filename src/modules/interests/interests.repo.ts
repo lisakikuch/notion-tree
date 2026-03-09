@@ -171,7 +171,7 @@ export async function replaceTags(data: {
     });
 }
 
-export async function remove(
+export async function deleteById(
     userId: string,
     interestId: string
 ) {
