@@ -15,7 +15,10 @@ function isTagNameConflict(error: unknown): boolean {
     );
 }
 
-export async function listTagsByUserAndIds(userId: string, tagIds: string[]) {
+export async function listTagsByUserAndIds(
+    userId: string,
+    tagIds: string[]
+): Promise<{ id: string; name: string }[]> {
     if (tagIds.length === 0) return [];
 
     const uniqueTagIds = Array.from(new Set(tagIds));
@@ -27,7 +30,10 @@ export async function listTagsByUserAndIds(userId: string, tagIds: string[]) {
     }));
 }
 
-export async function getTagById(userId: string, tagId: string) {
+export async function getTagById(
+    userId: string,
+    tagId: string
+): Promise<{ id: string; name: string }> {
     const tag = await tagsRepo.findById(userId, tagId);
     if (!tag) {
         throw new NotFoundError('Tag not found');
@@ -38,7 +44,20 @@ export async function getTagById(userId: string, tagId: string) {
     };
 }
 
-export async function createTag(userId: string, data: { name: string }) {
+export async function listTags(
+    userId: string
+): Promise<{ id: string; name: string }[]> {
+    const tags = await tagsRepo.findManyByUserId(userId);
+    return tags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+    }));
+}
+
+export async function createTag(
+    userId: string,
+    data: { name: string }
+): Promise<{ id: string; name: string }> {
     const name = normalizeTagName(data.name);
 
     if (!name) {
@@ -83,7 +102,7 @@ export async function assertTagsExistAndBelongToUser(
 export async function deleteTag(
     userId: string,
     tagId: string
-) {
+): Promise<void> {
     const deletedTag = await tagsRepo.deleteById(userId, tagId);
     if (deletedTag.count === 0) {
         throw new NotFoundError('Tag not found');

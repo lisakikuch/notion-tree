@@ -41,6 +41,18 @@ export async function findManyByIds(userId: string, tagIds: string[]) {
     return tags;
 }
 
+export async function findManyByUserId(userId: string) {
+    const tags = await prisma.tag.findMany({
+        where: { userId },
+        orderBy: { name: 'asc' },
+        select: {
+            id: true,
+            name: true
+        },
+    });
+    return tags;
+}
+
 export async function create(data: { userId: string; name: string }) {
     const tag = await prisma.tag.create({
         data: {
@@ -55,7 +67,7 @@ export async function create(data: { userId: string; name: string }) {
 export async function deleteById(userId: string, tagId: string) {
     return await prisma.tag.deleteMany({
         where: {
-            id: tagId, 
+            id: tagId,
             userId,
         },
     });
