@@ -1,26 +1,45 @@
 import prisma from '@/lib/prisma.js';
-import type { Prisma } from '@prisma/client';
 import type {
     ListInterestsQuery,
     CreateInterestBody,
     PatchInterestBody,
 } from '@/modules/interests/interests.schemas.js';
 import * as interestsRepo from '@/modules/interests/interests.repo.js';
+import type {
+    InterestTag,
+    InterestTagRow,
+    InterestListRow,
+    InterestDetailRow,
+    InterestDto,
+    ListInterestsResult,
+    InterestListItemDto,
+} from '@/modules/interests/interests.types.js';
 import { assertTagsExistAndBelongToUser } from '@/modules/tags/tags.service.js';
 import { decodeCursor, encodeCursor } from '@/lib/pagination/cursor.js';
 import { NotFoundError } from '@/lib/http/errors.js';
 
-type Tx = Prisma.TransactionClient;
-
-function mapTags(tags: { tag: { id: string; name: string } }[]) {
+function mapTags(tags: InterestTagRow[]): InterestTag[] {
     return tags.map((t) => t.tag);
 }
 
-function mapInterest(interest: any) {
-    return { ...interest, tags: mapTags(interest.tags) };
+function mapInterestListItem(interest: InterestListRow): InterestListItemDto {
+    return {
+        ...interest,
+        tags: mapTags(interest.tags),
+    };
 }
 
-export async function listInterests(userId: string, query: ListInterestsQuery) {
+function mapInterestDetail(interest: InterestDetailRow): InterestDto {
+    return {
+        ...interest,
+        tags: mapTags(interest.tags),
+    };
+}
+
+export async function listInterests(
+    userId: string,
+    query: ListInterestsQuery
+): Promise<ListInterestsResult> {
 
     const cursorPayload = query.cursor ? decodeCursor(query.cursor) : undefined;
 
@@ -32,20 +51,26 @@ export async function listInterests(userId: string, query: ListInterestsQuery) {
     });
 
     return {
-        items: items.map(mapInterest),
+        items: items.map(mapInterestListItem),
         nextCursor: nextCursorPayload ? encodeCursor(nextCursorPayload) : null,
     };
 }
 
-export async function getInterestById(userId: string, interestId: string) {
+export async function getInterestById(
+    userId: string,
+    interestId: string
+): Promise<InterestDto> {
     const item = await interestsRepo.findById(userId, interestId);
     if (!item) {
         throw new NotFoundError('Interest not found');
     }
-    return mapInterest(item);
+    return mapInterestDetail(item);
 }
 
-export async function createInterest(userId: string, data: CreateInterestBody) {
+export async function createInterest(
+    userId: string,
+    data: CreateInterestBody
+): Promise<InterestDto> {
     const interestId = await prisma.$transaction(async (tx) => {
         const createdInterest = await interestsRepo.create({
             tx,
@@ -73,7 +98,7 @@ export async function patchInterest(
     userId: string,
     interestId: string,
     data: PatchInterestBody
-) {
+): Promise<InterestDto> {
     await prisma.$transaction(async (tx) => {
         const updatedInterest = await interestsRepo.update({
             tx,
@@ -100,11 +125,11 @@ export async function patchInterest(
 }
 
 export async function deleteInterest(
-    userId: string, 
+    userId: string,
     interestId: string
-) {
+): Promise<void> {
     const deletedInterest = await interestsRepo.deleteById(userId, interestId);
-    
+
     if (deletedInterest.count === 0) {
         throw new NotFoundError('Interest not found');
     }
