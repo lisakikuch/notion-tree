@@ -8,7 +8,7 @@ import * as tagsController from '@/modules/tags/tags.controller.js';
 const router = express.Router();
 
 router.get(
-    '/:',
+    '/',
     auth,
     asyncHandler(tagsController.listTags)
 );

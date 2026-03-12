@@ -12,13 +12,13 @@ export function validate(schemas: Schemas): RequestHandler {
     return (req, res, next) => {
         try {
             if (schemas.body) {
-                (req as any).body = schemas.body.parse(req.body)
+                req.body = schemas.body.parse(req.body) as typeof req.body;
             }
             if (schemas.query) {
-                (req as any).query = schemas.query.parse(req.query)
+                req.query = schemas.query.parse(req.query) as typeof req.query;
             }
             if (schemas.params) {
-                (req as any).params = schemas.params.parse(req.params);
+                req.params = schemas.params.parse(req.params) as typeof req.params;
             }
             return next()
         } catch (err) {

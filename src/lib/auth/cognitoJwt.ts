@@ -19,7 +19,7 @@ const verifier = CognitoJwtVerifier.create({
 export async function verifyToken(token: string) {
     try {
         return await verifier.verify(token);
-    } catch (err) {
+    } catch {
         throw new UnauthorizedError('Invalid token');
     }
 }

@@ -44,6 +44,6 @@ export const deleteInterest: RequestHandler = async (req, res) => {
     const userId = req.user!.sub;
     const { id } = req.params as unknown as InterestIdParams;
 
-    const interest = await interestService.deleteInterest(userId, id);
+    await interestService.deleteInterest(userId, id);
     return res.status(204).send();
 }
