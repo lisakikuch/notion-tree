@@ -1,12 +1,9 @@
 import * as tagsRepo from '@/modules/tags/tags.repo.js';
+import { normalizeTagName } from '@/modules/tags/tags.helpers.js';
 import { NotFoundError, ConflictError, BadRequestError } from '@/lib/http/errors.js';
 import { Prisma } from '@prisma/client';
 
 type Tx = Prisma.TransactionClient;
-
-function normalizeTagName(name: string) {
-    return name.trim().toLowerCase();
-}
 
 function isTagNameConflict(error: unknown): boolean {
     return (

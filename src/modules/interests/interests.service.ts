@@ -6,35 +6,16 @@ import type {
 } from '@/modules/interests/interests.schemas.js';
 import * as interestsRepo from '@/modules/interests/interests.repo.js';
 import type {
-    InterestTag,
-    InterestTagRow,
-    InterestListRow,
-    InterestDetailRow,
     InterestDto,
     ListInterestsResult,
-    InterestListItemDto,
 } from '@/modules/interests/interests.types.js';
 import { assertTagsExistAndBelongToUser } from '@/modules/tags/tags.service.js';
 import { decodeCursor, encodeCursor } from '@/lib/pagination/cursor.js';
 import { NotFoundError } from '@/lib/http/errors.js';
-
-function mapTags(tags: InterestTagRow[]): InterestTag[] {
-    return tags.map((t) => t.tag);
-}
-
-function mapInterestListItem(interest: InterestListRow): InterestListItemDto {
-    return {
-        ...interest,
-        tags: mapTags(interest.tags),
-    };
-}
-
-function mapInterestDetail(interest: InterestDetailRow): InterestDto {
-    return {
-        ...interest,
-        tags: mapTags(interest.tags),
-    };
-}
+import {
+    mapInterestDetail,
+    mapInterestListItem
+} from '@/modules/interests/interests.helpers.js';
 
 export async function listInterests(
     userId: string,
