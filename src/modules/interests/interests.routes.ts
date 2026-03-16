@@ -19,6 +19,13 @@ router.get(
     asyncHandler(interestsController.listInterests)
 );
 
+router.get(
+    '/:id',
+    auth,
+    validate({ params: interestIdParamsSchema }),
+    asyncHandler(interestsController.getInterestById)
+);
+
 router.post(
     '/', 
     auth, 
