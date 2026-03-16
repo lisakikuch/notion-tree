@@ -55,22 +55,31 @@ export async function createTag(
     userId: string,
     data: { name: string }
 ): Promise<{ id: string; name: string }> {
-    const name = normalizeTagName(data.name);
+
+    const name = data.name.trim();
+    const nameNormalized = normalizeTagName(name);
 
     if (!name) {
-        throw new BadRequestError('Tag name must not be empty');
+        throw new BadRequestError("Tag name must not be empty");
     }
 
     try {
-        const tag = await tagsRepo.create({ userId, name });
+        const tag = await tagsRepo.create({
+            userId,
+            name,
+            nameNormalized
+        });
+
         return {
             id: tag.id,
             name: tag.name,
         };
+
     } catch (err) {
         if (isTagNameConflict(err)) {
-            throw new ConflictError('Tag name already exists');
+            throw new ConflictError("Tag name already exists");
         }
+
         throw err;
     }
 }
