@@ -1,22 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
-import { mockVerifyToken, resetMockVerifyToken } from './../../helpers/auth.js';
+import { describe, it, expect } from 'vitest';
+import { mockVerifyToken } from './../../helpers/auth.js';
 import request from 'supertest';
 import app from '@/app.js';
-import { resetDatabase, disconnectDatabase, createMultipleTestTags, createSingleTestTag, findTagById } from './../../helpers/db.js';
+import { createMultipleTestTags, createSingleTestTag, findTagById } from './../../helpers/db.js';
 
 describe('Tags API Integration Tests', () => {
-    beforeEach(async () => {
-        await resetDatabase();
-        mockVerifyToken();
-    });
-
-    afterEach(() => {
-        resetMockVerifyToken();
-    });
-
-    afterAll(async () => {
-        await disconnectDatabase();
-    });
 
     describe('Authentication and Tenant Isolation', () => {
         it('Authentication: returns 401 if no token is provided', async () => {
@@ -148,7 +136,7 @@ describe('Tags API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(404);
-        }); // <-- AND THIS ONE
+        });
 
         it('returns validation error for invalid UUID', async () => {
             const res = await request(app)
@@ -156,7 +144,7 @@ describe('Tags API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(422);
-        }); // <-- AND THIS ONE
+        });
 
         it('returns 404 if tag belongs to another user', async () => {
             const tag = await createSingleTestTag('other-user-id', 'Other User Tag');

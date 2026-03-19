@@ -3,7 +3,10 @@ import path from 'node:path';
 
 export default defineConfig({
   test: {
+    setupFiles: ['./tests/integration/helpers/setup.ts'],
+    fileParallelism: false,
     globals: true,
+    environment: 'node',
   },
   resolve: {
     alias: {
