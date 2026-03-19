@@ -53,14 +53,19 @@ export async function findManyByUserId(userId: string) {
     return tags;
 }
 
-export async function create(data: { userId: string; name: string }) {
+export async function create(data: {
+    userId: string;
+    name: string;
+    nameNormalized: string;
+}) {
     const tag = await prisma.tag.create({
         data: {
             userId: data.userId,
             name: data.name,
-            nameNormalized: data.name.toLowerCase(),
+            nameNormalized: data.nameNormalized,
         },
     });
+
     return tag;
 }
 

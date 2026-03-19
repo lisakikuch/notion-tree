@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as interestsController from '@/modules/interests/interests.controller.js';
-import auth from '@/lib/auth/authMiddleware.js';
+import { requireAuth } from '@/lib/auth/index.js';
 import { validate } from '@/lib/validation/validate.js';
 import { asyncHandler } from '@/lib/http/asyncHandler.js';
 import {
@@ -14,28 +14,35 @@ const router = Router();
 
 router.get(
     '/',
-    auth,
+    requireAuth,
     validate({ query: listInterestsQuerySchema }),
     asyncHandler(interestsController.listInterests)
 );
 
+router.get(
+    '/:id',
+    requireAuth,
+    validate({ params: interestIdParamsSchema }),
+    asyncHandler(interestsController.getInterestById)
+);
+
 router.post(
-    '/', 
-    auth, 
+    '/',
+    requireAuth,
     validate({ body: createInterestBodySchema }),
     asyncHandler(interestsController.createInterest)
 );
 
 router.patch(
-    '/:id', 
-    auth, 
+    '/:id',
+    requireAuth,
     validate({ params: interestIdParamsSchema, body: patchInterestBodySchema }),
     asyncHandler(interestsController.patchInterest)
 );
 
 router.delete(
-    '/:id', 
-    auth, 
+    '/:id',
+    requireAuth,
     validate({ params: interestIdParamsSchema }),
     asyncHandler(interestsController.deleteInterest)
 );

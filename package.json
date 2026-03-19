@@ -9,7 +9,11 @@
     "start": "tsx src/server.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "test:integration": "dotenv -e .env.test -- vitest run tests/integration",
+    "test:integration:watch": "dotenv -e .env.test -- vitest",
+    "db:test:push": "dotenv -e .env.test -- prisma db push",
+    "db:test:migrate": "dotenv -e .env.test -- prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +39,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.2.0",
     "@types/supertest": "^6.0.3",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
