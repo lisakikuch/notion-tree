@@ -134,6 +134,16 @@ export async function update(data: {
     const { tx, userId, interestId, title, reflection } = data;
     const db = tx ?? prisma;
 
+    if (title === undefined && reflection === undefined) {
+        const count = await db.interest.count({
+            where: {
+                id: interestId,
+                userId
+            }
+        });
+        return { count };
+    }
+
     return db.interest.updateMany({
         where: {
             id: interestId,
