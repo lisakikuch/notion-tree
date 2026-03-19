@@ -1,14 +1,16 @@
 import express from 'express';
 import routes from '@/routes/index.js';
-import { apiRateLimit } from './lib/http/rateLimit.js';
-import { errorMiddleware } from './middleware/errorMiddleware.js';
-import { notFoundMiddleware } from './middleware/notFoundMiddleware.js';
+import cookieParser from 'cookie-parser';
+import { apiRateLimit } from '@/lib/http/rateLimit.js';
+import { errorMiddleware } from '@/middleware/errorMiddleware.js';
+import { notFoundMiddleware } from '@/middleware/notFoundMiddleware.js';
 
 const app = express();
 
 app.disable('x-powered-by');
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK' });
