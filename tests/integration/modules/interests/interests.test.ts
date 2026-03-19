@@ -16,6 +16,156 @@ describe('Interests API Integration Tests', () => {
         });
     });
 
+    describe('GET /interests', () => {
+        it('returns an empty list when no interests exist', async () => {
+            const res = await request(app)
+                .get('/api/interests')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+            expect(Array.isArray(res.body.items)).toBe(true);
+            expect(res.body.items).toHaveLength(0);
+        });
+
+        it('returns a list of interests for the authenticated user in date descending order', async () => {
+            const userId = 'test-user-id';
+            await db.createSingleTestInterest(userId, 'Interest 1', 'Reflection 1');
+            await db.createSingleTestInterest(userId, 'Interest 2', 'Reflection 2');
+            await db.createSingleTestInterest(userId, 'Interest 3', 'Reflection 3');
+
+            const res = await request(app)
+                .get('/api/interests')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+            expect(res.body.items).toHaveLength(3);
+            expect(res.body.items[0].title).toBe('Interest 3'); // Assuming descending order
+            expect(res.body.items[2].title).toBe('Interest 1');
+        });
+
+        it('enforces tenant isolation (does not return other users\' interests)', async () => {
+            await db.createMultipleTestInterests([
+                { userId: 'test-user-id', title: 'My Interest', reflection: 'My Reflection' },
+                { userId: 'other-user-id', title: 'Other Interest', reflection: 'Other Reflection' },
+            ]);
+
+            const res = await request(app)
+                .get('/api/interests')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+            expect(res.body.items).toHaveLength(1);
+            expect(res.body.items[0].title).toBe('My Interest');
+        });
+
+        it('includes tags in the response if present', async () => {
+            const tag = await db.createSingleTestTag('test-user-id', 'Learning');
+            await db.createTestInterestWithTags({
+                title: 'Interest with Tags',
+                userId: 'test-user-id',
+                tagIds: [tag.id],
+            });
+
+            const res = await request(app)
+                .get('/api/interests')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+            expect(res.body.items[0].tags).toBeDefined();
+            expect(res.body.items[0].tags[0].name).toBe('Learning');
+        });
+
+        it('paginates correctly using limit and cursor', async () => {
+            const userId = 'test-user-id';
+            await db.createMultipleTestInterests([
+                { userId, title: 'Interest A', reflection: 'Ref A' },
+                { userId, title: 'Interest B', reflection: 'Ref B' },
+                { userId, title: 'Interest C', reflection: 'Ref C' }
+            ])
+
+            // --- PAGE 1 ---
+            // Fetch with limit=2
+            const page1Res = await request(app)
+                .get('/api/interests?limit=2')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(page1Res.status).toBe(200);
+            expect(page1Res.body.items).toHaveLength(2);
+            // Since we created 3 items and requested 2, there should be a next page
+            expect(typeof page1Res.body.nextCursor).toBe('string');
+            expect(page1Res.body.nextCursor).not.toBeNull();
+
+            // --- PAGE 2 ---
+            // Fetch remaining items using the cursor from Page 1
+            const page2Res = await request(app)
+                .get(`/api/interests?limit=2&cursor=${page1Res.body.nextCursor}`)
+                .set('Authorization', 'Bearer test-token');
+
+            expect(page2Res.status).toBe(200);
+            expect(page2Res.body.items).toHaveLength(1); // Only 1 item left
+            // Since this is the end of the list, nextCursor should be null
+            expect(page2Res.body.nextCursor).toBeNull();
+
+            // Ensure no overlap of items between pages
+            const page1Ids = page1Res.body.items.map((i: any) => i.id);
+            expect(page1Ids).not.toContain(page2Res.body.items[0].id);
+        });
+
+        it('sorts interests correctly based on the sort parameter', async () => {
+            const userId = 'test-user-id';
+
+            await db.createMultipleTestInterests([
+                { userId, title: 'Interest A', reflection: 'Ref A' },
+                { userId, title: 'Interest B', reflection: 'Ref B' },
+            ])
+
+            // Fetch ascending
+            const ascRes = await request(app)
+                .get('/api/interests?sort=asc')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(ascRes.status).toBe(200);
+
+            // Fetch descending
+            const descRes = await request(app)
+                .get('/api/interests?sort=desc')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(descRes.status).toBe(200);
+
+            // Validate that the arrays are exact reverses of each other
+            const ascIds = ascRes.body.items.map((i: any) => i.id);
+            const descIds = descRes.body.items.map((i: any) => i.id);
+
+            expect(ascIds[0]).toBe(descIds[descIds.length - 1]);
+            expect(ascIds[ascIds.length - 1]).toBe(descIds[0]);
+        });
+
+        it('returns 422 validation error for query parameters outside allowed boundaries', async () => {
+            // Test limit > max (50) defined in schema
+            const overLimitRes = await request(app)
+                .get('/api/interests?limit=100')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(overLimitRes.status).toBe(422);
+            expect(overLimitRes.body.message).toContain('Validation failed');
+
+            // Test limit < min (1)
+            const underLimitRes = await request(app)
+                .get('/api/interests?limit=0')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(underLimitRes.status).toBe(422);
+
+            // Test invalid sort enum
+            const invalidSortRes = await request(app)
+                .get('/api/interests?sort=random')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(invalidSortRes.status).toBe(422);
+        });
+    });
+
     describe('POST /interests', () => {
         it('creates a new interest successfully', async () => {
             const res = await request(app)
