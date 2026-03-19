@@ -5,22 +5,31 @@ import { ValidationError } from '@/lib/http/errors.js';
 type Schemas = Partial<{
     body: z.ZodTypeAny;
     query: z.ZodTypeAny;
-    params: z.ZodTypeAny
+    params: z.ZodTypeAny;
 }>;
 
 export function validate(schemas: Schemas): RequestHandler {
     return (req, res, next) => {
         try {
+            const validated: {
+                body?: unknown;
+                query?: unknown;
+                params?: unknown;
+            } = {};
+
             if (schemas.body) {
-                req.body = schemas.body.parse(req.body) as typeof req.body;
+                validated.body = schemas.body.parse(req.body);
             }
             if (schemas.query) {
-                req.query = schemas.query.parse(req.query) as typeof req.query;
+                validated.query = schemas.query.parse(req.query);
             }
             if (schemas.params) {
-                req.params = schemas.params.parse(req.params) as typeof req.params;
+                validated.params = schemas.params.parse(req.params);
             }
-            return next()
+
+            req.validated = validated;
+
+            return next();
         } catch (err) {
             if (err instanceof ZodError) {
                 return next(new ValidationError('Validation failed', err.issues));
