@@ -32,8 +32,8 @@ export async function listInterests(
     });
 
     return {
-        items: items.map(mapInterestListItem),
-        nextCursor: nextCursorPayload ? encodeCursor(nextCursorPayload) : null,
+        data: items.map(mapInterestListItem),
+        meta: { nextCursor: nextCursorPayload ? encodeCursor(nextCursorPayload) : null, }
     };
 }
 

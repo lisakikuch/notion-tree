@@ -30,8 +30,8 @@ describe('Tags API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body).toHaveLength(1);
-            expect(res.body[0]).toMatchObject({
+            expect(res.body.data).toHaveLength(1);
+            expect(res.body.data[0]).toMatchObject({
                 name: 'User 1 Tag',
             });
         });
@@ -52,10 +52,10 @@ describe('Tags API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body).toHaveLength(3);
-            expect(res.body[0].name).toBe('apple');
-            expect(res.body[1].name).toBe('Banana');
-            expect(res.body[2].name).toBe('Cherry');
+            expect(res.body.data).toHaveLength(3);
+            expect(res.body.data[0].name).toBe('apple');
+            expect(res.body.data[1].name).toBe('Banana');
+            expect(res.body.data[2].name).toBe('Cherry');
         });
 
         it('returns empty array if user has no tags', async () => {
@@ -65,7 +65,7 @@ describe('Tags API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body).toEqual([]);
+            expect(res.body.data).toEqual([]);
         });
     });
 
