@@ -1,10 +1,10 @@
 export type InterestTag = {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 };
 
 export type InterestTagRow = {
-    tag: InterestTag
+  tag: InterestTag
 };
 
 export type InterestListRow = {
@@ -42,6 +42,6 @@ export type InterestDto = {
 };
 
 export type ListInterestsResult = {
-    items: InterestListItemDto[];
-    nextCursor: string | null;
+  data: InterestListItemDto[];
+  meta: { nextCursor: string | null; }
 };

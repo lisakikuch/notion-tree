@@ -1,5 +1,6 @@
 import * as tagsRepo from '@/modules/tags/tags.repo.js';
 import { normalizeTagName } from '@/modules/tags/tags.helpers.js';
+import type { ListTagsResult } from './tags.types.js';
 import { NotFoundError, ConflictError, BadRequestError } from '@/lib/http/errors.js';
 import { Prisma } from '@prisma/client';
 
@@ -43,12 +44,16 @@ export async function getTagById(
 
 export async function listTags(
     userId: string
-): Promise<{ id: string; name: string }[]> {
+): Promise<ListTagsResult> {
     const tags = await tagsRepo.findManyByUserId(userId);
-    return tags.map((tag) => ({
-        id: tag.id,
-        name: tag.name,
-    }));
+
+    return {
+        data: tags.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+        })),
+        meta: {},
+    };
 }
 
 export async function createTag(

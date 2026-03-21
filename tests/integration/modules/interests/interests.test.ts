@@ -23,8 +23,8 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(Array.isArray(res.body.items)).toBe(true);
-            expect(res.body.items).toHaveLength(0);
+            expect(Array.isArray(res.body.data)).toBe(true);
+            expect(res.body.data).toHaveLength(0);
         });
 
         it('returns a list of interests for the authenticated user in date descending order', async () => {
@@ -38,9 +38,9 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body.items).toHaveLength(3);
-            expect(res.body.items[0].title).toBe('Interest 3'); // Assuming descending order
-            expect(res.body.items[2].title).toBe('Interest 1');
+            expect(res.body.data).toHaveLength(3);
+            expect(res.body.data[0].title).toBe('Interest 3'); // Assuming descending order
+            expect(res.body.data[2].title).toBe('Interest 1');
         });
 
         it('enforces tenant isolation (does not return other users\' interests)', async () => {
@@ -54,8 +54,8 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body.items).toHaveLength(1);
-            expect(res.body.items[0].title).toBe('My Interest');
+            expect(res.body.data).toHaveLength(1);
+            expect(res.body.data[0].title).toBe('My Interest');
         });
 
         it('includes tags in the response if present', async () => {
@@ -71,8 +71,8 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
-            expect(res.body.items[0].tags).toBeDefined();
-            expect(res.body.items[0].tags[0].name).toBe('Learning');
+            expect(res.body.data[0].tags).toBeDefined();
+            expect(res.body.data[0].tags[0].name).toBe('Learning');
         });
 
         it('paginates correctly using limit and cursor', async () => {
@@ -90,25 +90,25 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(page1Res.status).toBe(200);
-            expect(page1Res.body.items).toHaveLength(2);
+            expect(page1Res.body.data).toHaveLength(2);
             // Since we created 3 items and requested 2, there should be a next page
-            expect(typeof page1Res.body.nextCursor).toBe('string');
-            expect(page1Res.body.nextCursor).not.toBeNull();
+            expect(typeof page1Res.body.meta.nextCursor).toBe('string');
+            expect(page1Res.body.meta.nextCursor).not.toBeNull();
 
             // --- PAGE 2 ---
             // Fetch remaining items using the cursor from Page 1
             const page2Res = await request(app)
-                .get(`/api/interests?limit=2&cursor=${page1Res.body.nextCursor}`)
+                .get(`/api/interests?limit=2&cursor=${page1Res.body.meta.nextCursor}`)
                 .set('Authorization', 'Bearer test-token');
 
             expect(page2Res.status).toBe(200);
-            expect(page2Res.body.items).toHaveLength(1); // Only 1 item left
+            expect(page2Res.body.data).toHaveLength(1); // Only 1 item left
             // Since this is the end of the list, nextCursor should be null
-            expect(page2Res.body.nextCursor).toBeNull();
+            expect(page2Res.body.meta.nextCursor).toBeNull();
 
             // Ensure no overlap of items between pages
-            const page1Ids = page1Res.body.items.map((i: any) => i.id);
-            expect(page1Ids).not.toContain(page2Res.body.items[0].id);
+            const page1Ids = page1Res.body.data.map((i: any) => i.id);
+            expect(page1Ids).not.toContain(page2Res.body.data[0].id);
         });
 
         it('sorts interests correctly based on the sort parameter', async () => {
@@ -134,8 +134,8 @@ describe('Interests API Integration Tests', () => {
             expect(descRes.status).toBe(200);
 
             // Validate that the arrays are exact reverses of each other
-            const ascIds = ascRes.body.items.map((i: any) => i.id);
-            const descIds = descRes.body.items.map((i: any) => i.id);
+            const ascIds = ascRes.body.data.map((i: any) => i.id);
+            const descIds = descRes.body.data.map((i: any) => i.id);
 
             expect(ascIds[0]).toBe(descIds[descIds.length - 1]);
             expect(ascIds[ascIds.length - 1]).toBe(descIds[0]);
