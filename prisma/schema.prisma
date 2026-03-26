@@ -19,7 +19,7 @@ model Interest {
 
   tags   InterestTag[]
 
-  @@index([userId, lastAccessedAt, id], map: "interest_user_lastAccessedAt_id_idx")
+  @@index([userId, updatedAt, id], map: "interest_user_updatedAt_id_idx")
 }
 
 model Tag {

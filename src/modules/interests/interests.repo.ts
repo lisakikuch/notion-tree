@@ -14,7 +14,7 @@ export async function findManyPaginated(data: {
     const { userId, limit, sort, cursor } = data;
 
     const orderBy: Prisma.InterestOrderByWithRelationInput[] = [
-        { lastAccessedAt: sort },
+        { updatedAt: sort },
         { id: sort },
     ];
 
@@ -24,14 +24,14 @@ export async function findManyPaginated(data: {
             ? {
                 OR: [
                     {
-                        lastAccessedAt:
+                        updatedAt:
                             sort === 'desc'
-                                ? { lt: cursor.lastAccessedAt }
-                                : { gt: cursor.lastAccessedAt },
+                                ? { lt: cursor.updatedAt }
+                                : { gt: cursor.updatedAt },
                     },
                     {
                         AND: [
-                            { lastAccessedAt: cursor.lastAccessedAt },
+                            { updatedAt: cursor.updatedAt },
                             { id: sort === 'desc' ? { lt: cursor.id } : { gt: cursor.id } },
                         ],
                     },
@@ -46,7 +46,7 @@ export async function findManyPaginated(data: {
         select: {
             id: true,
             title: true,
-            lastAccessedAt: true,
+            updatedAt: true,
             tags: {
                 select: {
                     tag: {
@@ -67,7 +67,7 @@ export async function findManyPaginated(data: {
 
     const nextCursorPayload =
         hasNext && lastItem
-            ? { lastAccessedAt: lastItem.lastAccessedAt, id: lastItem.id }
+            ? { updatedAt: lastItem.updatedAt, id: lastItem.id }
             : null;
 
     return {

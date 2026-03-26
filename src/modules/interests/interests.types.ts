@@ -10,7 +10,7 @@ export type InterestTagRow = {
 export type InterestListRow = {
   id: string;
   title: string;
-  lastAccessedAt: Date;
+  updatedAt: Date;
   tags: InterestTagRow[];
 };
 
@@ -27,7 +27,7 @@ export type InterestDetailRow = {
 export type InterestListItemDto = {
   id: string;
   title: string;
-  lastAccessedAt: Date;
+  updatedAt: Date;
   tags: InterestTag[];
 };
 

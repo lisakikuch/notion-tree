@@ -30,7 +30,7 @@ describe('interests.helpers', () => {
             const input: InterestListRow = {
                 id: '1',
                 title: 'Interest 1',
-                lastAccessedAt: new Date('2024-01-01T00:00:00Z'),
+                updatedAt: new Date('2024-01-01T00:00:00Z'),
                 tags: [
                     { tag: { id: '1', name: 'Tag1' } },
                     { tag: { id: '2', name: 'Tag2' } },
@@ -40,7 +40,7 @@ describe('interests.helpers', () => {
             expect(result).toEqual({
                 id: '1',
                 title: 'Interest 1',
-                lastAccessedAt: new Date('2024-01-01T00:00:00Z'),
+                updatedAt: new Date('2024-01-01T00:00:00Z'),
                 tags: [
                     { id: '1', name: 'Tag1' },
                     { id: '2', name: 'Tag2' },
@@ -52,14 +52,14 @@ describe('interests.helpers', () => {
             const input: InterestListRow = {
                 id: '1',
                 title: 'Interest 1',
-                lastAccessedAt: new Date('2024-01-01T00:00:00Z'),
+                updatedAt: new Date('2024-01-01T00:00:00Z'),
                 tags: [],
             };
             const result = mapInterestListItem(input);
             expect(result).toEqual({
                 id: '1',
                 title: 'Interest 1',
-                lastAccessedAt: new Date('2024-01-01T00:00:00Z'),
+                updatedAt: new Date('2024-01-01T00:00:00Z'),
                 tags: [],
             });
         });

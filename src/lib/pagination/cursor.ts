@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { BadRequestError } from '@/lib/http/errors.js';
 
 export type CursorPayload = {
-    lastAccessedAt: Date;
+    updatedAt: Date;
     id: string;
 };
 
 const cursorPayloadWireSchema = z.object({
-    lastAccessedAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
     id: z.uuid(),
 });
 
@@ -23,12 +23,12 @@ export function decodeCursor(cursorString: string): CursorPayload {
         // 3) validate shape
         const parsed = cursorPayloadWireSchema.parse(parsedUnknown);
         // 4) convert ISO -> Date
-        const dt = new Date(parsed.lastAccessedAt);
+        const dt = new Date(parsed.updatedAt);
         if (Number.isNaN(dt.getTime())) {
             throw new BadRequestError('Invalid cursor format');
         }
 
-        return { lastAccessedAt: dt, id: parsed.id }
+        return { updatedAt: dt, id: parsed.id }
     } catch (err) {
         if (err instanceof z.ZodError) {
             throw new BadRequestError('Invalid cursor format', err.issues);
@@ -40,7 +40,7 @@ export function decodeCursor(cursorString: string): CursorPayload {
 
 export function encodeCursor(payload: CursorPayload): string {
     const wire = {
-        lastAccessedAt: payload.lastAccessedAt.toISOString(),
+        updatedAt: payload.updatedAt.toISOString(),
         id: payload.id,
     };
 
