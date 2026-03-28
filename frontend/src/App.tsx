@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { queryClient } from '@/lib/queryClient';
-import { clearAccessToken } from '@/lib/AuthToken';
+import { clearAccessToken } from '@/lib/authToken';
 
 function MainLayout() {
   const [selectedNoteId, setSelectedNoteId] = useState<string>();

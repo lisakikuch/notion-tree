@@ -1,4 +1,4 @@
-import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/AuthToken';
+import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/authToken';
 
 export interface LoginCredentials {
   email: string;
@@ -13,8 +13,10 @@ export interface AuthError {
   message: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/login', {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

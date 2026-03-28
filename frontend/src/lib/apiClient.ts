@@ -1,14 +1,17 @@
-import { getAccessToken } from './AuthToken';
+import { getAccessToken } from '@/lib/authToken';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export class ApiError extends Error {
+  public status: number;
+
   constructor(
     message: string,
-    public status: number
+    status: number
   ) {
     super(message);
     this.name = 'ApiError';
+    this.status = status;
   }
 }
 
