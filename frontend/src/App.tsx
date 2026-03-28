@@ -4,14 +4,17 @@ import { useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { NoteDetail } from '@/components/note/NoteDetail';
 import { queryClient } from '@/lib/queryClient';
 import { clearAccessToken } from '@/lib/authToken';
 
 function MainLayout() {
   const [selectedNoteId, setSelectedNoteId] = useState<string>();
+  const [isEditing, setIsEditing] = useState(false);
 
   function handleSelectNote(id: string) {
     setSelectedNoteId(id);
+    setIsEditing(false);
   }
 
   function handleAddNote() {
@@ -32,18 +35,12 @@ function MainLayout() {
         onAddNote={handleAddNote}
         onLogout={handleLogout}
       />
-      <main className="flex-1 flex items-center justify-center">
-        {selectedNoteId ? (
-          <div className="text-center space-y-2">
-            <p className="text-lg font-medium text-foreground">Note Selected</p>
-            <p className="text-sm text-muted-foreground">ID: {selectedNoteId}</p>
-          </div>
-        ) : (
-          <div className="text-center space-y-2">
-            <p className="text-lg font-medium text-foreground">Welcome to Notion Tree</p>
-            <p className="text-sm text-muted-foreground">Select a note or create a new one</p>
-          </div>
-        )}
+      <main className="flex-1 relative">
+        <NoteDetail
+          noteId={selectedNoteId!}
+          isEditing={isEditing}
+          onEditingChange={setIsEditing}
+        />
       </main>
     </div>
   );

@@ -10,6 +10,21 @@ export interface Interest {
   title: string;
   updatedAt: string;
   tags: Tag[];
+  reflection?: string;
+}
+
+export interface InterestDetail {
+  id: string;
+  title: string;
+  reflection: string;
+  updatedAt: string;
+  tags: Tag[];
+}
+
+export interface UpdateInterestPayload {
+  title?: string;
+  reflection?: string;
+  tagIds?: string[];
 }
 
 export interface InterestsResponse {
@@ -44,4 +59,18 @@ export async function fetchInterests(
   const endpoint = `/interests${queryString ? `?${queryString}` : ''}`;
   
   return apiClient<InterestsResponse>(endpoint);
+}
+
+export async function fetchInterestById(id: string): Promise<InterestDetail> {
+  return apiClient<InterestDetail>(`/interests/${id}`);
+}
+
+export async function updateInterest(
+  id: string,
+  payload: UpdateInterestPayload
+): Promise<InterestDetail> {
+  return apiClient<InterestDetail>(`/interests/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
