@@ -27,6 +27,12 @@ export interface UpdateInterestPayload {
   tagIds?: string[];
 }
 
+export interface CreateInterestPayload {
+  title: string;
+  reflection?: string;
+  tagIds?: string[];
+}
+
 export interface InterestsResponse {
   data: Interest[];
   meta: {
@@ -71,6 +77,15 @@ export async function updateInterest(
 ): Promise<InterestDetail> {
   return apiClient<InterestDetail>(`/interests/${id}`, {
     method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createInterest(
+  payload: CreateInterestPayload
+): Promise<InterestDetail> {
+  return apiClient<InterestDetail>('/interests', {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 }

@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useInterestDetail, useUpdateInterest } from '@/hooks/useInterests';
+import { useInterestDetail, useUpdateInterest, useCreateInterest } from '@/hooks/useInterests';
 import { Button } from '@/components/ui/button';
-import { Pencil, Check, X, FileText } from 'lucide-react';
+import { Pencil, Check, X, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NoteDetailProps {
   noteId: string;
   isEditing?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  isNew?: boolean;
+  onCreated?: (id: string) => void;
+  onCancelNew?: () => void;
+  onNewTitleChange?: (title: string) => void;
 }
 
 function NoteDetailSkeleton() {
@@ -56,76 +60,133 @@ function EmptyNoteState() {
   );
 }
 
-export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteDetailProps) {
-  const { data: note, isLoading, error } = useInterestDetail(noteId);
+export function NoteDetail({ 
+  noteId, 
+  isEditing = false, 
+  onEditingChange,
+  isNew = false,
+  onCreated,
+  onCancelNew,
+  onNewTitleChange,
+}: NoteDetailProps) {
+  const { data: note, isLoading, error } = useInterestDetail(isNew ? undefined : noteId);
   const updateMutation = useUpdateInterest();
+  const createMutation = useCreateInterest();
 
   const [localTitle, setLocalTitle] = useState('');
   const [localReflection, setLocalReflection] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // Reset state when switching to new note mode
+  useEffect(() => {
+    if (isNew) {
+      setLocalTitle('');
+      setLocalReflection('');
+      setHasChanges(false);
+      setCreateError(null);
+    }
+  }, [isNew]);
 
   // Sync local state with fetched data
   useEffect(() => {
-    if (note) {
+    if (note && !isNew) {
       setLocalTitle(note.title);
       setLocalReflection(note.reflection || '');
       setHasChanges(false);
     }
-  }, [note]);
+  }, [note, isNew]);
 
   // Track changes
   useEffect(() => {
-    if (note) {
+    if (isNew) {
+      setHasChanges(localTitle.trim().length > 0 || localReflection.trim().length > 0);
+    } else if (note) {
       const titleChanged = localTitle !== note.title;
       const reflectionChanged = localReflection !== (note.reflection || '');
       setHasChanges(titleChanged || reflectionChanged);
     }
-  }, [localTitle, localReflection, note]);
+  }, [localTitle, localReflection, note, isNew]);
+
+  // Notify parent of title changes for sidebar display
+  useEffect(() => {
+    if (isNew) {
+      onNewTitleChange?.(localTitle);
+    }
+  }, [localTitle, isNew, onNewTitleChange]);
 
   const handleSave = useCallback(() => {
-    if (!noteId || !hasChanges) return;
+    if (isNew) {
+      // Create new note
+      const trimmedTitle = localTitle.trim();
+      if (!trimmedTitle) return;
 
-    updateMutation.mutate(
-      {
-        id: noteId,
-        payload: {
-          title: localTitle,
-          reflection: localReflection,
+      setCreateError(null);
+      createMutation.mutate(
+        {
+          title: trimmedTitle,
+          reflection: localReflection.trim() || undefined,
+          tagIds: [],
         },
-      },
-      {
-        onSuccess: () => {
-          setHasChanges(false);
-          onEditingChange?.(false);
+        {
+          onSuccess: (data) => {
+            setHasChanges(false);
+            onCreated?.(data.id);
+          },
+          onError: (err) => {
+            setCreateError(err instanceof Error ? err.message : 'Failed to create note');
+          },
+        }
+      );
+    } else {
+      // Update existing note
+      if (!noteId || !hasChanges) return;
+
+      updateMutation.mutate(
+        {
+          id: noteId,
+          payload: {
+            title: localTitle,
+            reflection: localReflection,
+          },
         },
-      }
-    );
-  }, [noteId, localTitle, localReflection, hasChanges, updateMutation, onEditingChange]);
+        {
+          onSuccess: () => {
+            setHasChanges(false);
+            onEditingChange?.(false);
+          },
+        }
+      );
+    }
+  }, [isNew, noteId, localTitle, localReflection, hasChanges, createMutation, updateMutation, onEditingChange, onCreated]);
 
   const handleCancel = useCallback(() => {
-    if (note) {
+    if (isNew) {
+      onCancelNew?.();
+    } else if (note) {
       setLocalTitle(note.title);
       setLocalReflection(note.reflection || '');
       setHasChanges(false);
+      onEditingChange?.(false);
     }
-    onEditingChange?.(false);
-  }, [note, onEditingChange]);
+  }, [isNew, note, onEditingChange, onCancelNew]);
 
   const handleBlur = useCallback(() => {
-    if (hasChanges && isEditing) {
+    // Don't auto-save for new notes - require explicit Save click
+    if (hasChanges && isEditing && !isNew) {
       handleSave();
     }
-  }, [hasChanges, isEditing, handleSave]);
+  }, [hasChanges, isEditing, isNew, handleSave]);
 
-  if (!noteId) {
+  if (!noteId && !isNew) {
     return <EmptyNoteState />;
   }
 
-  if (isLoading) {
+  if (isLoading && !isNew) {
     return <NoteDetailSkeleton />;
   }
 
-  if (error || !note) {
+  if ((error || !note) && !isNew) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
@@ -139,12 +200,26 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
     );
   }
 
+  const showEditMode = isNew || isEditing;
+  const isSaving = isNew ? createMutation.isPending : updateMutation.isPending;
+  const canSave = isNew 
+    ? localTitle.trim().length > 0 
+    : hasChanges;
+
   return (
     <div className="flex flex-col h-full">
+      {/* Error banner for create mode */}
+      {createError && (
+        <div className="flex items-center gap-2 px-6 py-3 bg-destructive/10 text-destructive border-b border-destructive/20">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <p className="text-sm">{createError}</p>
+        </div>
+      )}
+
       {/* Header with title and edit toggle */}
       <div className="flex items-start justify-between gap-4 p-6 pb-4 border-b border-border">
         <div className="flex-1 min-w-0">
-          {isEditing ? (
+          {showEditMode ? (
             <input
               type="text"
               value={localTitle}
@@ -159,18 +234,18 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
               autoFocus
             />
           ) : (
-            <h1 className="text-2xl font-semibold text-foreground truncate">{note.title}</h1>
+            <h1 className="text-2xl font-semibold text-foreground truncate">{note?.title}</h1>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          {isEditing ? (
+          {showEditMode ? (
             <>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleCancel}
-                disabled={updateMutation.isPending}
+                disabled={isSaving}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
@@ -178,13 +253,17 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
               </Button>
               <Button
                 variant="default"
-                size="icon"
+                size="sm"
                 onClick={handleSave}
-                disabled={!hasChanges || updateMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
+                disabled={!canSave || isSaving}
+                className="bg-primary hover:bg-primary/90 gap-2"
               >
-                <Check className="w-4 h-4" />
-                <span className="sr-only">Save</span>
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                {isNew ? 'Save' : 'Save'}
               </Button>
             </>
           ) : (
@@ -203,7 +282,9 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-border">
-        {note.tags.length > 0 ? (
+        {isNew ? (
+          <span className="text-sm text-muted-foreground italic">No tags</span>
+        ) : note && note.tags.length > 0 ? (
           note.tags.map((tag) => (
             <span
               key={tag.id}
@@ -222,7 +303,7 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
 
       {/* Reflection content - takes most vertical space */}
       <div className="flex-1 p-6 overflow-auto">
-        {isEditing ? (
+        {showEditMode ? (
           <textarea
             value={localReflection}
             onChange={(e) => setLocalReflection(e.target.value)}
@@ -237,7 +318,7 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
           />
         ) : (
           <div className="prose prose-sm max-w-none">
-            {note.reflection ? (
+            {note?.reflection ? (
               <p className="text-foreground leading-relaxed whitespace-pre-wrap">
                 {note.reflection}
               </p>
@@ -248,8 +329,8 @@ export function NoteDetail({ noteId, isEditing = false, onEditingChange }: NoteD
         )}
       </div>
 
-      {/* Saving indicator */}
-      {updateMutation.isPending && (
+      {/* Saving indicator for update mode */}
+      {updateMutation.isPending && !isNew && (
         <div className="absolute bottom-4 right-4 flex items-center gap-2 text-sm text-muted-foreground">
           <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           Saving...

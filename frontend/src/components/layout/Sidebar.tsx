@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Plus, ArrowUpDown, LogOut, FileText } from 'lucide-react';
 
+export const TEMP_NEW_NOTE_ID = '__new__';
+
 interface SidebarProps {
   selectedNoteId?: string;
   onSelectNote: (id: string) => void;
   onAddNote: () => void;
   onLogout?: () => void;
+  tempNewNoteTitle?: string;
 }
 
 function formatDate(dateString: string): string {
@@ -79,6 +82,7 @@ export function Sidebar({
   onSelectNote,
   onAddNote,
   onLogout,
+  tempNewNoteTitle,
 }: SidebarProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { data, isLoading, error } = useInterests({ sort: sortOrder });
@@ -88,7 +92,8 @@ export function Sidebar({
   }
 
   const notes = data?.data ?? [];
-  const hasNotes = notes.length > 0;
+  const isCreatingNew = selectedNoteId === TEMP_NEW_NOTE_ID;
+  const hasNotes = notes.length > 0 || isCreatingNew;
 
   return (
     <aside className="flex h-full w-72 flex-col border-r border-border bg-sidebar">
@@ -126,6 +131,24 @@ export function Sidebar({
           <EmptyState />
         ) : (
           <nav className="space-y-1 p-2" aria-label="Notes list">
+            {/* Temporary new note row */}
+            {isCreatingNew && (
+              <button
+                onClick={() => onSelectNote(TEMP_NEW_NOTE_ID)}
+                className={cn(
+                  'w-full rounded-lg border p-3 text-left transition-colors',
+                  'border-primary/30 bg-primary/10'
+                )}
+                aria-current="true"
+              >
+                <p className="truncate text-sm font-medium text-foreground mb-1.5">
+                  {tempNewNoteTitle || 'Untitled'}
+                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground shrink-0">Just now</span>
+                </div>
+              </button>
+            )}
             {notes.map((note) => (
               <button
                 key={note.id}

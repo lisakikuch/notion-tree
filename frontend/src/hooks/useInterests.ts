@@ -3,9 +3,11 @@ import {
   fetchInterests,
   fetchInterestById,
   updateInterest,
+  createInterest,
   type InterestsResponse,
   type InterestDetail,
   type UpdateInterestPayload,
+  type CreateInterestPayload,
 } from '@/api/interests';
 
 export const interestKeys = {
@@ -43,6 +45,18 @@ export function useUpdateInterest() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: UpdateInterestPayload }) =>
       updateInterest(id, payload),
+    onSuccess: (data) => {
+      queryClient.setQueryData(interestKeys.detail(data.id), data);
+      queryClient.invalidateQueries({ queryKey: interestKeys.lists() });
+    },
+  });
+}
+
+export function useCreateInterest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateInterestPayload) => createInterest(payload),
     onSuccess: (data) => {
       queryClient.setQueryData(interestKeys.detail(data.id), data);
       queryClient.invalidateQueries({ queryKey: interestKeys.lists() });
