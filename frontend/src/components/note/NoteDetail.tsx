@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useInterestDetail, useUpdateInterest, useCreateInterest } from '@/hooks/useInterests';
+import { useInterestDetail, useUpdateInterest, useCreateInterest, useDeleteInterest } from '@/hooks/useInterests';
+import { TopBar } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
-import { Pencil, Check, X, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { Check, X, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NoteDetailProps {
@@ -14,6 +15,7 @@ interface NoteDetailProps {
   onCreated?: (id: string) => void;
   onCancelNew?: () => void;
   onNewTitleChange?: (title: string) => void;
+  onDeleted?: () => void;
 }
 
 function NoteDetailSkeleton() {
@@ -68,10 +70,12 @@ export function NoteDetail({
   onCreated,
   onCancelNew,
   onNewTitleChange,
+  onDeleted,
 }: NoteDetailProps) {
   const { data: note, isLoading, error } = useInterestDetail(isNew ? undefined : noteId);
   const updateMutation = useUpdateInterest();
   const createMutation = useCreateInterest();
+  const deleteMutation = useDeleteInterest();
 
   const [localTitle, setLocalTitle] = useState('');
   const [localReflection, setLocalReflection] = useState('');
@@ -178,6 +182,16 @@ export function NoteDetail({
     }
   }, [hasChanges, isEditing, isNew, handleSave]);
 
+  const handleDelete = useCallback(() => {
+    if (!noteId || isNew) return;
+
+    deleteMutation.mutate(noteId, {
+      onSuccess: () => {
+        onDeleted?.();
+      },
+    });
+  }, [noteId, isNew, deleteMutation, onDeleted]);
+
   if (!noteId && !isNew) {
     return <EmptyNoteState />;
   }
@@ -206,8 +220,27 @@ export function NoteDetail({
     ? localTitle.trim().length > 0 
     : hasChanges;
 
+  const currentTagIds = note?.tags.map((t) => t.id) ?? [];
+
   return (
     <div className="flex flex-col h-full">
+      {/* TopBar for existing notes (not in new mode) */}
+      {!isNew && noteId && (
+        <TopBar
+          noteId={noteId}
+          currentTagIds={currentTagIds}
+          isEditing={isEditing}
+          onToggleEdit={() => {
+            if (isEditing && hasChanges) {
+              handleSave();
+            } else {
+              onEditingChange?.(!isEditing);
+            }
+          }}
+          onDeleteNote={handleDelete}
+        />
+      )}
+
       {/* Error banner for create mode */}
       {createError && (
         <div className="flex items-center gap-2 px-6 py-3 bg-destructive/10 text-destructive border-b border-destructive/20">
@@ -216,7 +249,7 @@ export function NoteDetail({
         </div>
       )}
 
-      {/* Header with title and edit toggle */}
+      {/* Header with title */}
       <div className="flex items-start justify-between gap-4 p-6 pb-4 border-b border-border">
         <div className="flex-1 min-w-0">
           {showEditMode ? (
@@ -238,46 +271,35 @@ export function NoteDetail({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {showEditMode ? (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-                <span className="sr-only">Cancel</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleSave}
-                disabled={!canSave || isSaving}
-                className="bg-primary hover:bg-primary/90 gap-2"
-              >
-                {isSaving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                {isNew ? 'Save' : 'Save'}
-              </Button>
-            </>
-          ) : (
+        {/* Save/Cancel buttons only shown in new note mode */}
+        {isNew && (
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onEditingChange?.(true)}
+              onClick={handleCancel}
+              disabled={isSaving}
               className="text-muted-foreground hover:text-foreground"
             >
-              <Pencil className="w-4 h-4" />
-              <span className="sr-only">Edit</span>
+              <X className="w-4 h-4" />
+              <span className="sr-only">Cancel</span>
             </Button>
-          )}
-        </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleSave}
+              disabled={!canSave || isSaving}
+              className="bg-primary hover:bg-primary/90 gap-2"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              Save
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Tags */}

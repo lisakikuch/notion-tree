@@ -89,3 +89,9 @@ export async function createInterest(
     body: JSON.stringify(payload),
   });
 }
+
+export async function deleteInterest(id: string): Promise<void> {
+  await apiClient<void>(`/interests/${id}`, {
+    method: 'DELETE',
+  });
+}

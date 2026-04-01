@@ -4,6 +4,7 @@ import {
   fetchInterestById,
   updateInterest,
   createInterest,
+  deleteInterest,
   type InterestsResponse,
   type InterestDetail,
   type UpdateInterestPayload,
@@ -59,6 +60,18 @@ export function useCreateInterest() {
     mutationFn: (payload: CreateInterestPayload) => createInterest(payload),
     onSuccess: (data) => {
       queryClient.setQueryData(interestKeys.detail(data.id), data);
+      queryClient.invalidateQueries({ queryKey: interestKeys.lists() });
+    },
+  });
+}
+
+export function useDeleteInterest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteInterest(id),
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: interestKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: interestKeys.lists() });
     },
   });

@@ -42,6 +42,11 @@ function MainLayout() {
     setIsEditing(false);
   }
 
+  function handleNoteDeleted() {
+    setSelectedNoteId(undefined);
+    setIsEditing(false);
+  }
+
   function handleLogout() {
     clearAccessToken();
     window.location.reload();
@@ -65,6 +70,7 @@ function MainLayout() {
           onCreated={handleNoteCreated}
           onCancelNew={handleCancelNew}
           onNewTitleChange={setTempNewNoteTitle}
+          onDeleted={handleNoteDeleted}
         />
       </main>
     </div>

@@ -40,5 +40,10 @@ export async function apiClient<T>(
     throw new ApiError(error.message || 'An error occurred', response.status);
   }
 
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json();
 }
