@@ -175,13 +175,6 @@ export function NoteDetail({
     }
   }, [isNew, note, onEditingChange, onCancelNew]);
 
-  const handleBlur = useCallback(() => {
-    // Don't auto-save for new notes - require explicit Save click
-    if (hasChanges && isEditing && !isNew) {
-      handleSave();
-    }
-  }, [hasChanges, isEditing, isNew, handleSave]);
-
   const handleDelete = useCallback(() => {
     if (!noteId || isNew) return;
 
@@ -257,7 +250,6 @@ export function NoteDetail({
               type="text"
               value={localTitle}
               onChange={(e) => setLocalTitle(e.target.value)}
-              onBlur={handleBlur}
               className={cn(
                 'w-full text-2xl font-semibold bg-transparent border-b-2 border-primary',
                 'outline-none focus:border-primary text-foreground',
@@ -329,7 +321,6 @@ export function NoteDetail({
           <textarea
             value={localReflection}
             onChange={(e) => setLocalReflection(e.target.value)}
-            onBlur={handleBlur}
             className={cn(
               'w-full h-full min-h-[200px] resize-none',
               'bg-transparent text-foreground leading-relaxed',

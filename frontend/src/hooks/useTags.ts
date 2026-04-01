@@ -4,7 +4,6 @@ import {
   createTag,
   deleteTag,
   type TagsResponse,
-  type Tag,
   type CreateTagPayload,
 } from '@/api/tags';
 import { interestKeys } from '@/hooks/useInterests';

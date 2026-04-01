@@ -1,4 +1,6 @@
-import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/AuthToken';
+import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/authToken';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface LoginCredentials {
   email: string;
@@ -14,11 +16,12 @@ export interface AuthError {
 }
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/login', {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
     body: JSON.stringify(credentials),
   });
 
@@ -36,12 +39,13 @@ export async function logout(): Promise<void> {
   const token = getAccessToken();
   
   try {
-    await fetch('/api/auth/logout', {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      credentials: 'include',
     });
   } finally {
     clearAccessToken();
@@ -49,7 +53,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function refreshToken(): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/refresh', {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
