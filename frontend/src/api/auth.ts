@@ -1,5 +1,4 @@
-import { clearAccessToken, setAccessToken } from '@/lib/authToken';
-import { authApiClient, type ApiError } from '@/lib/apiClient';
+import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/AuthToken';
 
 export interface LoginCredentials {
   email: string;
@@ -15,29 +14,55 @@ export interface AuthError {
 }
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  try {
-    const { data } = await authApiClient.post<LoginResponse>('/auth/login', credentials);
-    setAccessToken(data.accessToken);
-    return data;
-  } catch (error) {
-    if ((error as ApiError).status === 401) {
-      throw new Error('Login failed. Please check your credentials.');
-    }
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  });
 
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Login failed. Please check your credentials.');
   }
+
+  const data: LoginResponse = await response.json();
+  setAccessToken(data.accessToken);
+  return data;
 }
 
 export async function logout(): Promise<void> {
+  const token = getAccessToken();
+  
   try {
-    await authApiClient.post('/auth/logout');
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
   } finally {
     clearAccessToken();
   }
 }
 
 export async function refreshToken(): Promise<LoginResponse> {
-  const { data } = await authApiClient.post<LoginResponse>('/auth/refresh');
+  const response = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    clearAccessToken();
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  const data: LoginResponse = await response.json();
   setAccessToken(data.accessToken);
   return data;
 }
