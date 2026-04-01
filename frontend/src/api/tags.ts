@@ -21,7 +21,7 @@ export async function fetchTags(): Promise<TagsResponse> {
 export async function createTag(payload: CreateTagPayload): Promise<Tag> {
   return apiClient<Tag>('/tags', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 

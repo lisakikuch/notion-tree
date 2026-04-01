@@ -77,7 +77,7 @@ export async function updateInterest(
 ): Promise<InterestDetail> {
   return apiClient<InterestDetail>(`/interests/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
@@ -86,7 +86,7 @@ export async function createInterest(
 ): Promise<InterestDetail> {
   return apiClient<InterestDetail>('/interests', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
