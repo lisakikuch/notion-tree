@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { Sidebar, TEMP_NEW_NOTE_ID } from '@/components/layout/Sidebar';
 import { NoteDetail } from '@/components/note/NoteDetail';
 import { queryClient } from '@/lib/queryClient';
-import { clearAccessToken } from '@/lib/authToken';
+import { clearAccessToken, setAccessToken } from '@/lib/authToken';
+import { authApiClient } from '@/lib/apiClient';
+import { logout } from '@/api/auth';
 
 function MainLayout() {
   const [selectedNoteId, setSelectedNoteId] = useState<string>();
@@ -47,8 +49,8 @@ function MainLayout() {
     setIsEditing(false);
   }
 
-  function handleLogout() {
-    clearAccessToken();
+  async function handleLogout() {
+    await logout();
     window.location.reload();
   }
 
@@ -77,11 +79,54 @@ function MainLayout() {
   );
 }
 
+function StartupAuthLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
+    </div>
+  );
+}
+
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function refreshSession() {
+      try {
+        const { data } = await authApiClient.post<{ accessToken: string }>('/auth/refresh');
+
+        if (!isMounted) return;
+
+        setAccessToken(data.accessToken);
+        setIsAuthenticated(true);
+      } catch {
+        if (!isMounted) return;
+
+        clearAccessToken();
+        setIsAuthenticated(false);
+      } finally {
+        if (isMounted) {
+          setIsCheckingAuth(false);
+        }
+      }
+    }
+
+    void refreshSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function handleLoginSuccess() {
     setIsAuthenticated(true);
+  }
+
+  if (isCheckingAuth) {
+    return <StartupAuthLoader />;
   }
 
   if (!isAuthenticated) {
