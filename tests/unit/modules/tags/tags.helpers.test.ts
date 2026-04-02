@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeTagName } from '@/modules/tags/tags.helpers.js';
+import { normalizeTagName } from '../../../../src/modules/tags/tags.helpers.js';
 
 describe('normalizeTagName', () => {
     it('trims and lowercases the tag name', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodeCursor, encodeCursor } from '@/lib/pagination/cursor.js';
+import { decodeCursor, encodeCursor } from '../../../src/lib/pagination/cursor.js';
 
 describe('Cursor encoding and decoding', () => {
     it('should encode and decode a cursor payload correctly', () => {
