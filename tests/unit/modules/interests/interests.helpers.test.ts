@@ -3,12 +3,12 @@ import {
     mapTags,
     mapInterestDetail,
     mapInterestListItem
-} from '@/modules/interests/interests.helpers.js';
+} from '../../../../src/modules/interests/interests.helpers.js';
 import type {
     InterestTagRow,
     InterestListRow,
     InterestDetailRow
-} from '@/modules/interests/interests.types.js';
+} from '../../../../src/modules/interests/interests.types.js';
 
 describe('interests.helpers', () => {
     it('should map tags correctly', () => {

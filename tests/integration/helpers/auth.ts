@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import { verifyToken } from '@/lib/auth/cognitoJwt.js';
-import { loginWithCognito, refreshWithCognito } from '@/lib/auth/cognitoAuth.js';
-import { UnauthorizedError } from '@/lib/http/errors.js';
+import { verifyToken } from '../../../src/lib/auth/cognitoJwt.js';
+import { loginWithCognito, refreshWithCognito } from '../../../src/lib/auth/cognitoAuth.js';
+import { UnauthorizedError } from '../../../src/lib/http/errors.js';
 
 vi.mock('@/lib/auth/cognitoJwt.js', () => ({
     verifyToken: vi.fn(),

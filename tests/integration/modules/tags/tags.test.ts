@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mockVerifyToken } from './../../helpers/auth.js';
 import request from 'supertest';
-import app from '@/app.js';
+import app from '../../../../src/app.js';
 import { createMultipleTestTags, createSingleTestTag, findTagById } from './../../helpers/db.js';
 
 describe('Tags API Integration Tests', () => {
