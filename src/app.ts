@@ -16,7 +16,7 @@ app.disable('x-powered-by');
 
 const allowedOrigins = [
     'http://localhost:5173',
-    process.env.FRONTEND_URL
+    'https://notion-tree-ashen.vercel.app',
 ];
 
 app.use(cors({
