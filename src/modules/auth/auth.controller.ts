@@ -20,7 +20,7 @@ export const login: RequestHandler = async (req, res, next) => {
         res.cookie('refreshToken', RefreshToken, {
             httpOnly: true,
             secure: NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
             path: '/api/auth/refresh',
         });
@@ -52,7 +52,7 @@ export const logout: RequestHandler = (_req, res) => {
     res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
         path: '/api/auth/refresh',
     });
     res.status(200).json({ message: 'Logged out' });
