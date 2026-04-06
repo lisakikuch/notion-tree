@@ -16,6 +16,7 @@ export function mockVerifyToken(userId: string = 'test-user-id') {
     const mockedVerifyToken = vi.mocked(verifyToken);
     mockedVerifyToken.mockResolvedValue({
         sub: userId,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 }
 
