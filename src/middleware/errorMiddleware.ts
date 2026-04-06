@@ -3,9 +3,9 @@ import { HttpError } from "@/lib/http/errors.js";
 
 export function errorMiddleware(
   err: unknown,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
   if (err instanceof HttpError) {
     return res.status(err.status).json({

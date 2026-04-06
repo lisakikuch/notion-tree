@@ -5,7 +5,6 @@ import {
     mapInterestListItem
 } from '../../../../src/modules/interests/interests.helpers.js';
 import type {
-    InterestTagRow,
     InterestListRow,
     InterestDetailRow
 } from '../../../../src/modules/interests/interests.types.js';

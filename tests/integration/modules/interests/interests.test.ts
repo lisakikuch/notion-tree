@@ -107,7 +107,7 @@ describe('Interests API Integration Tests', () => {
             expect(page2Res.body.meta.nextCursor).toBeNull();
 
             // Ensure no overlap of items between pages
-            const page1Ids = page1Res.body.data.map((i: any) => i.id);
+            const page1Ids = page1Res.body.data.map((i: { id: string }) => i.id);
             expect(page1Ids).not.toContain(page2Res.body.data[0].id);
         });
 
@@ -134,8 +134,8 @@ describe('Interests API Integration Tests', () => {
             expect(descRes.status).toBe(200);
 
             // Validate that the arrays are exact reverses of each other
-            const ascIds = ascRes.body.data.map((i: any) => i.id);
-            const descIds = descRes.body.data.map((i: any) => i.id);
+            const ascIds = ascRes.body.data.map((i: { id: string }) => i.id);
+            const descIds = descRes.body.data.map((i: { id: string }) => i.id);
 
             expect(ascIds[0]).toBe(descIds[descIds.length - 1]);
             expect(ascIds[ascIds.length - 1]).toBe(descIds[0]);
@@ -291,7 +291,6 @@ describe('Interests API Integration Tests', () => {
         });
 
         it('returns validation error for an invalid UUID in the params', async () => {
-            const interest = await db.createSingleTestInterest('test-user-id', 'Test Title', 'Test Reflection');
 
             const res = await request(app)
                 .patch('/api/interests/invalid-uuid')

@@ -5,5 +5,7 @@ export type TagDto = {
 
 export type ListTagsResult = {
   data: TagDto[];
-  meta: {};
+  meta?: {
+    nextCursor?: string | null;
+  };
 };
