@@ -29,6 +29,8 @@ export async function listInterests(
         limit: query.limit,
         sort: query.sort,
         cursor: cursorPayload,
+        ...(query.tagIds ? { tagIds: query.tagIds } : {}),
+        ...(query.keyword ? { keyword: query.keyword } : {}),
     });
 
     return {

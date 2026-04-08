@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../../../src/app.js';
 import * as db from './../../helpers/db.js';
+import type { InterestListItemDto } from '../../../../src/modules/interests/interests.types.js';
 
 describe('Interests API Integration Tests', () => {
 
@@ -163,6 +164,158 @@ describe('Interests API Integration Tests', () => {
                 .set('Authorization', 'Bearer test-token');
 
             expect(invalidSortRes.status).toBe(422);
+        });
+
+        it('filters interests by a single tagId', async () => {
+            const userId = 'test-user-id';
+
+            const tagA = await db.createSingleTestTag(userId, 'Tag A');
+            const tagB = await db.createSingleTestTag(userId, 'Tag B');
+
+            await db.createTestInterestWithTags({
+                title: 'Interest A',
+                userId,
+                tagIds: [tagA.id],
+            });
+
+            await db.createTestInterestWithTags({
+                title: 'Interest B',
+                userId,
+                tagIds: [tagB.id],
+            });
+
+            const res = await request(app)
+                .get(`/api/interests?tagIds=${tagA.id}`)
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+
+            const data = res.body.data as InterestListItemDto[];
+
+            expect(data).toHaveLength(1);
+            expect(data[0].title).toBe('Interest A');
+        });
+
+        it('filters interests by multiple tagIds (ANY match)', async () => {
+            const userId = 'test-user-id';
+
+            const tagA = await db.createSingleTestTag(userId, 'Tag A');
+            const tagB = await db.createSingleTestTag(userId, 'Tag B');
+
+            await db.createTestInterestWithTags({
+                title: 'Interest A',
+                userId,
+                tagIds: [tagA.id],
+            });
+
+            await db.createTestInterestWithTags({
+                title: 'Interest B',
+                userId,
+                tagIds: [tagB.id],
+            });
+
+            await db.createTestInterestWithTags({
+                title: 'Interest AB',
+                userId,
+                tagIds: [tagA.id, tagB.id],
+            });
+
+            const res = await request(app)
+                .get(`/api/interests?tagIds=${tagA.id}&tagIds=${tagB.id}`)
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+
+            const data = res.body.data as InterestListItemDto[];
+            const titles = data.map(i => i.title);
+
+            expect(titles).toContain('Interest A');
+            expect(titles).toContain('Interest B');
+            expect(titles).toContain('Interest AB');
+        });
+
+        it('filters interests by keyword (title and reflection)', async () => {
+            const userId = 'test-user-id';
+
+            await db.createMultipleTestInterests([
+                { userId, title: 'Learn Node.js', reflection: 'Backend work' },
+                { userId, title: 'React Basics', reflection: 'Frontend work' },
+                { userId, title: 'Database Design', reflection: 'Node and SQL' },
+            ]);
+
+            const res = await request(app)
+                .get('/api/interests?keyword=node')
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+
+            const data = res.body.data as InterestListItemDto[];
+            const titles = data.map(i => i.title);
+
+            expect(titles).toContain('Learn Node.js');
+            expect(titles).toContain('Database Design');
+            expect(titles).not.toContain('React Basics');
+        });
+
+        it('filters by tagIds AND keyword together', async () => {
+            const userId = 'test-user-id';
+
+            const backendTag = await db.createSingleTestTag(userId, 'Backend');
+            const frontendTag = await db.createSingleTestTag(userId, 'Frontend');
+
+            await db.createTestInterestWithTags({
+                title: 'Learn Node.js',
+                userId,
+                tagIds: [backendTag.id],
+            });
+
+            await db.createTestInterestWithTags({
+                title: 'Learn React',
+                userId,
+                tagIds: [frontendTag.id],
+            });
+
+            await db.createTestInterestWithTags({
+                title: 'Advanced Node Patterns',
+                userId,
+                tagIds: [backendTag.id],
+            });
+
+            const res = await request(app)
+                .get(`/api/interests?tagIds=${backendTag.id}&keyword=node`)
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+
+            const data = res.body.data as InterestListItemDto[];
+            const titles = data.map(i => i.title);
+
+            expect(data).toHaveLength(2);
+            expect(titles).toContain('Learn Node.js');
+            expect(titles).toContain('Advanced Node Patterns');
+            expect(titles).not.toContain('Learn React');
+        });
+
+        it('returns empty array when no interests match filters', async () => {
+            const userId = 'test-user-id';
+
+            const tag = await db.createSingleTestTag(userId, 'Backend');
+
+            await db.createTestInterestWithTags({
+                title: 'React Guide',
+                userId,
+                tagIds: [tag.id],
+            });
+
+            const res = await request(app)
+                .get(`/api/interests?tagIds=${tag.id}&keyword=node`)
+                .set('Authorization', 'Bearer test-token');
+
+            expect(res.status).toBe(200);
+
+            const data = res.body.data as InterestListItemDto[];
+
+            expect(data).toHaveLength(0);
         });
     });
 
