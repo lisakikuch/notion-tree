@@ -10,33 +10,60 @@ export async function findManyPaginated(data: {
     limit: number,
     sort: Sort,
     cursor?: CursorPayload | undefined,
+    tagIds?: string[],
+    keyword?: string,
 }) {
-    const { userId, limit, sort, cursor } = data;
+    const { userId, limit, sort, cursor, tagIds, keyword } = data;
 
     const orderBy: Prisma.InterestOrderByWithRelationInput[] = [
         { updatedAt: sort },
         { id: sort },
     ];
 
+    const andConditions: Prisma.InterestWhereInput[] = [];
+
+    if (keyword) {
+        andConditions.push({
+            OR: [
+                { title: { contains: keyword } },
+                { reflection: { contains: keyword } },
+            ],
+        });
+    }
+
+    if (cursor) {
+        andConditions.push({
+            OR: [
+                {
+                    updatedAt:
+                        sort === 'desc'
+                            ? { lt: cursor.updatedAt }
+                            : { gt: cursor.updatedAt },
+                },
+                {
+                    AND: [
+                        { updatedAt: cursor.updatedAt },
+                        { id: sort === 'desc' ? { lt: cursor.id } : { gt: cursor.id } },
+                    ],
+                },
+            ],
+        });
+    }
+
     const where: Prisma.InterestWhereInput = {
         userId,
-        ...(cursor
+
+        ...(tagIds?.length
             ? {
-                OR: [
-                    {
-                        updatedAt:
-                            sort === 'desc'
-                                ? { lt: cursor.updatedAt }
-                                : { gt: cursor.updatedAt },
+                tags: {
+                    some: {
+                        tagId: { in: tagIds },
                     },
-                    {
-                        AND: [
-                            { updatedAt: cursor.updatedAt },
-                            { id: sort === 'desc' ? { lt: cursor.id } : { gt: cursor.id } },
-                        ],
-                    },
-                ],
-            } : {}),
+                },
+            }
+            : {}),
+
+        ...(andConditions.length ? { AND: andConditions } : {}),
     };
 
     const rows = await prisma.interest.findMany({

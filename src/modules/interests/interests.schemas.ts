@@ -16,11 +16,27 @@ const optionalTrimmedText = z
 
 const sortSchema = z.enum(['asc', 'desc']).default('desc');
 
+const filterTagIdSchema = z
+  .union([
+    z.array(uuidSchema),
+    uuidSchema
+  ])
+  .transform(val => Array.isArray(val) ? val : [val])
+  .optional();
+
+const optionalKeyword = z
+    .string()
+    .trim()
+    .min(2, "Keyword too short")
+    .optional();
+
 // GET /interests
 export const listInterestsQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(50).default(20),
     cursor: z.string().min(1).optional(),
     sort: sortSchema,
+    tagIds: filterTagIdSchema,
+    keyword: optionalKeyword,
 });
 
 // POST /interests

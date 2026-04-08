@@ -35,7 +35,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(morgan(process.env.NODE_ENV !== 'production' ? 'dev' : 'combined'));
+if (process.env.NODE_ENV !== 'test') {
+    app.use(morgan(process.env.NODE_ENV !== 'production' ? 'dev' : 'combined'));
+}
 
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK' });
