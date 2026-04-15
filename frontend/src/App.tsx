@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from '@/components/auth/LoginPage';
 import { Sidebar, TEMP_NEW_NOTE_ID } from '@/components/layout/Sidebar';
@@ -90,35 +90,26 @@ function StartupAuthLoader() {
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const didAttemptRefresh = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
+    if (didAttemptRefresh.current) return;
+    didAttemptRefresh.current = true;
 
     async function refreshSession() {
       try {
         const { data } = await authApiClient.post<{ accessToken: string }>('/auth/refresh');
-
-        if (!isMounted) return;
-
         setAccessToken(data.accessToken);
         setIsAuthenticated(true);
       } catch {
-        if (!isMounted) return;
-
         clearAccessToken();
         setIsAuthenticated(false);
       } finally {
-        if (isMounted) {
-          setIsCheckingAuth(false);
-        }
+        setIsCheckingAuth(false);
       }
     }
 
     void refreshSession();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   function handleLoginSuccess() {

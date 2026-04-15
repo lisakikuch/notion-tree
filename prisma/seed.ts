@@ -11,14 +11,28 @@ function normalize(name: string) {
   return name.trim().toLowerCase();
 }
 
+const TAG_POOL = [
+  "Backend",
+  "Frontend",
+  "Database",
+  "DevOps",
+  "System Design",
+  "Testing",
+];
+
+function getRandomTags() {
+  const count = Math.floor(Math.random() * 3) + 1; // 1–3 tags
+  return [...TAG_POOL]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, count);
+}
+
 async function main() {
   console.log("🌱 Seeding database...");
 
   // 1. Create Tags
-  const tagNames = ["Backend", "Frontend", "Database"];
-
   const tags = await Promise.all(
-    tagNames.map((name) =>
+    TAG_POOL.map((name) =>
       prisma.tag.upsert({
         where: {
           userId_nameNormalized: {
@@ -36,48 +50,24 @@ async function main() {
     )
   );
 
-  console.log("✅ Tags seeded:", tags.map(t => t.name));
+  console.log("✅ Tags ready");
 
-  // 2. Create Interests
-  const interestsData = [
-    {
-      title: "Learn Express.js deeply",
-      reflection: "Understand middleware, routing, error handling",
-      tagNames: ["Backend"],
-    },
-    {
-      title: "Study React patterns",
-      reflection: "Hooks, state management, performance",
-      tagNames: ["Frontend"],
-    },
-    {
-      title: "Master SQL joins",
-      reflection: "Focus on performance and indexing",
-      tagNames: ["Database"],
-    },
-    {
-      title: "Build fullstack project",
-      reflection: "Connect frontend + backend + DB",
-      tagNames: ["Backend", "Frontend"],
-    },
-  ];
+  // 2. Generate 50 Interests
+  for (let i = 1; i <= 50; i++) {
+    const tagNames = getRandomTags();
 
-  for (const item of interestsData) {
-    // Create interest
     const interest = await prisma.interest.create({
       data: {
         userId: DEV_USER_ID,
-        title: item.title,
-        reflection: item.reflection,
+        title: `Sample Note ${i}`,
+        reflection: `This is reflection for note ${i}. Focus on improving system thinking and backend design.`,
       },
     });
 
-    // Map tag names to IDs
     const tagIds = tags
-      .filter((t) => item.tagNames.includes(t.name))
+      .filter((t) => tagNames.includes(t.name))
       .map((t) => t.id);
 
-    // Create relations
     await prisma.interestTag.createMany({
       data: tagIds.map((tagId) => ({
         interestId: interest.id,
@@ -86,7 +76,7 @@ async function main() {
       skipDuplicates: true,
     });
 
-    console.log(`✅ Interest created: ${interest.title}`);
+    console.log(`✅ Created: Sample Note ${i}`);
   }
 
   console.log("🎉 Seeding complete");
