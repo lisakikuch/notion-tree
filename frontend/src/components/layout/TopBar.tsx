@@ -16,7 +16,7 @@ export function TopBar({
   onDeleteNote,
 }: TopBarProps) {
   return (
-    <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-card">
+    <div className="flex items-center justify-end gap-2 px-3 h-[52px] border-b border-border bg-card">
       {/* Edit / Done */}
       <Button
         variant="ghost"

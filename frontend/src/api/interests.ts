@@ -43,27 +43,35 @@ export interface InterestsResponse {
 export interface FetchInterestsParams {
   sort?: 'asc' | 'desc';
   limit?: number;
-  cursor?: string;
+  cursor?: string | null;
+  keyword?: string;
+  tagIds?: string[];
 }
 
 export async function fetchInterests(
   params: FetchInterestsParams = {}
 ): Promise<InterestsResponse> {
   const searchParams = new URLSearchParams();
-  
+
   if (params.sort) {
     searchParams.set('sort', params.sort);
   }
   if (params.limit) {
     searchParams.set('limit', String(params.limit));
   }
-  if (params.cursor) {
+  if (params.cursor != null) {
     searchParams.set('cursor', params.cursor);
+  }
+
+  if (params.keyword && params.keyword.length >= 2) {
+    searchParams.set('keyword', params.keyword);
+  }
+  if (params.tagIds && params.tagIds.length > 0) {
+    params.tagIds.forEach((id) => searchParams.append('tagIds', id));
   }
 
   const queryString = searchParams.toString();
   const endpoint = `/interests${queryString ? `?${queryString}` : ''}`;
-  
   return apiClient<InterestsResponse>(endpoint);
 }
 

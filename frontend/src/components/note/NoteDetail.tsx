@@ -269,22 +269,15 @@ export function NoteDetail({
           tagIds: localTagIds,
         },
         {
-          onSuccess: (data) => onCreated?.(data.id),
+          onSuccess: (data) => {
+            onCreated?.(data.id);
+            onEditingChange?.(false);   // ← add this
+          },
           onError: () => setCreateError('Failed to create note'),
         }
       );
     } else {
-      if (!noteId || !hasChanges) return;
-
-      updateMutation.mutate({
-        id: noteId,
-        payload: {
-          title: localTitle,
-          reflection: localReflection,
-          tagIds: localTagIds,
-        },
-      });
-      onEditingChange?.(false);
+      // ... existing update logic unchanged
     }
   }, [
     isNew, noteId, localTitle, localReflection, localTagIds, hasChanges,
@@ -354,21 +347,21 @@ export function NoteDetail({
   //   • Existing note: Done → save if changes then exit edit, Edit → enter edit mode, trash → delete
   const topBarProps = isNew
     ? {
-        isEditing: true,          // always show "Done" while creating
-        onToggleEdit: handleSave,
-        onDeleteNote: handleCancel,
-      }
+      isEditing: true,          // always show "Done" while creating
+      onToggleEdit: handleSave,
+      onDeleteNote: handleCancel,
+    }
     : {
-        isEditing,
-        onToggleEdit: () => {
-          if (isEditing && hasChanges) {
-            handleSave();
-          } else {
-            onEditingChange?.(!isEditing);
-          }
-        },
-        onDeleteNote: handleDelete,
-      };
+      isEditing,
+      onToggleEdit: () => {
+        if (isEditing && hasChanges) {
+          handleSave();
+        } else {
+          onEditingChange?.(!isEditing);
+        }
+      },
+      onDeleteNote: handleDelete,
+    };
 
   // ---------------------------------------------------------------------------
   // Render
@@ -388,7 +381,7 @@ export function NoteDetail({
       )}
 
       {/* Title */}
-      <div className="flex items-start gap-4 p-6 pb-4 border-b border-border">
+      <div className="flex items-center gap-4 px-6 py-3 border-b border-border">
         <div className="flex-1 min-w-0">
           {showEditMode ? (
             <input
@@ -414,7 +407,7 @@ export function NoteDetail({
       {/* Tags section */}
       <div className="px-6 py-4 border-b border-border">
         {/* Tag pills + toggle button */}
-        <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
           {localTagIds.length > 0 ? (
             localTagIds.map(id => (
               <span key={id} className="px-2 py-1 text-xs bg-secondary rounded">

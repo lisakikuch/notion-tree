@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/react-query';
 import {
   fetchInterests,
   fetchInterestById,
@@ -14,7 +20,8 @@ import {
 export const interestKeys = {
   all: ['interests'] as const,
   lists: () => [...interestKeys.all, 'list'] as const,
-  list: (sort: 'asc' | 'desc') => [...interestKeys.lists(), sort] as const,
+  list: (sort: 'asc' | 'desc', keyword?: string, tagIds?: string[]) =>
+    [...interestKeys.lists(), sort, keyword ?? '', ...(tagIds ?? [])] as const,
   details: () => [...interestKeys.all, 'detail'] as const,
   detail: (id: string) => [...interestKeys.details(), id] as const,
 };
@@ -23,12 +30,34 @@ export interface UseInterestsOptions {
   sort?: 'asc' | 'desc';
 }
 
-export function useInterests(options: UseInterestsOptions = {}) {
-  const { sort = 'desc' } = options;
+export function useInfiniteInterests(
+  sort: 'asc' | 'desc' = 'desc',
+  keyword?: string,
+  tagIds?: string[],
+) {
+  return useInfiniteQuery<
+    InterestsResponse,
+    Error,
+    InfiniteData<InterestsResponse>,
+    ReturnType<typeof interestKeys.list>,
+    string | undefined
+  >({
+    queryKey: interestKeys.list(sort, keyword, tagIds),
 
-  return useQuery<InterestsResponse>({
-    queryKey: interestKeys.list(sort),
-    queryFn: () => fetchInterests({ sort }),
+    queryFn: ({ pageParam }) =>
+      fetchInterests({
+        sort,
+        limit: 20,
+        cursor: pageParam,
+        keyword,
+        tagIds,
+      }),
+
+    initialPageParam: undefined,
+
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.nextCursor ?? undefined;
+    },
   });
 }
 
